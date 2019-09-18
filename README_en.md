@@ -117,7 +117,7 @@ python train_image_classifiers.py \
 ```
 
 #### 2.2.2 PAI Trial
-PAI supports several state-of-art frameworks, including TensorFlow(compatible with community version of 1.4 and 1.8), MXNet(0.9.5), Caffe(rc3). For TensorFlow users, PAI provides a built-in PAISoar component for distribution training. For mannual, please turn to [FastNN-On-PAI](https://yuque.antfin-inc.com/docs/share/48c723cf-eef0-4da4-8bb9-090300832ffd).
+PAI supports several state-of-art frameworks, including TensorFlow(compatible with community version of 1.4 and 1.8), MXNet(0.9.5), Caffe(rc3). For TensorFlow users, PAI provides a built-in PAISoar component for distribution training. For mannual, please turn to [FastNN-On-PAI](https://help.aliyun.com/document_detail/139435.html).
 
 
 ## 3. User Parameters Intructions

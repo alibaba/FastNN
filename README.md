@@ -114,7 +114,7 @@ python train_image_classifiers.py \
 ```
 
 #### 2.2.2 PAI平台运行
-机器学习平台PAI目前支持的框架包括 TensorFlow（兼容开源TF1.4、1.8版本），MXNet 0.9.5， Caffe rc3。TensorFlow 和 MXNet 支持用户自己编写的 Python 代码， Caffe 支持用户自定义网络文件。其中tensorflow框架内置PAISoar功能，支持单机多卡、多机多卡的分布式训练。如需在PAI平台试用FastNN，请参考[FastNN-On-PAI](https://yuque.antfin-inc.com/docs/share/641d1062-a4a4-4d71-962d-867bbcfdbb6b)文档。
+机器学习平台PAI目前支持的框架包括 TensorFlow（兼容开源TF1.4、1.8版本），MXNet 0.9.5， Caffe rc3。TensorFlow 和 MXNet 支持用户自己编写的 Python 代码， Caffe 支持用户自定义网络文件。其中tensorflow框架内置PAISoar功能，支持单机多卡、多机多卡的分布式训练。如需在PAI平台试用FastNN，请参考[FastNN-On-PAI](https://help.aliyun.com/document_detail/139435.html)文档。
 
 ## 3. 用户参数指南
 FastNN库综合各个模型及PAISoar框架的需求，统一将可能用到的超参定义在flags.py文件（支持用户自定义新超参）中，参数可分为以下六大类：
@@ -304,7 +304,7 @@ datasets_map = {
 如需读取其他数据格式，需要自行实现dataset pipeline构建逻辑（参考utils/dataset_utils.py）。
 
 ### 4.2 增加模型API
-开发者如需完成新模型的开发，参考images/models目录下各模型代码，有以下要求：
+开发者如需完成新模型的开发，参考image_models/models目录下各模型代码，有以下要求：
 
 * 单机单卡代码跑通，并能正常收敛；
 * 单机单卡代码暴露出输入／输出接口，输入属性包括Type／Shape等对应于preprocessing输出属性，以及输出属性包括Type／Shape等对应数据集label的属性；
@@ -313,7 +313,7 @@ datasets_map = {
 datasets、preprocessing逻辑在仅开发新模型时可直接复用，关于模型需要做以下操作：
 
 * models/model_factory.py中models_map和arg_scopes_map增加新模型的定义，可参考model_factory.py中对已有模型的定义；
-* 正常收敛的新模型代码导入到project的images/models目录即可。
+* 正常收敛的新模型代码导入到project的image_models/models目录即可。
 
 ### 4.3 增加数据预处理API
 开发者如需自定义新的数据预处理流程，有以下要求：
@@ -324,7 +324,7 @@ datasets、preprocessing逻辑在仅开发新模型时可直接复用，关于�
 
 * preprocessing_factory.py中preprocessing_fn_map增加新的预处理函数的定义；
 
-* 预处理函数代码导入到project的images/preprocessing下即可，可参考已有实现，如inception_preprocessing.py等
+* 预处理函数代码导入到project的image_models/preprocessing下即可，可参考已有实现，如inception_preprocessing.py等
 
 ### 4.4 增加损失函数API
 FastNN库images的主文件train_image_classifiers中默认使用tf.losses.sparse_softmax_cross_entropy构造loss_fn，若需要构造自定义的损失函数，直接修改主文件中的loss_fn。值得注意的是，使用PAISoar做分布式时，loss_fn要求只返回loss，若需返回自定义参数，可通过全局参数传输，可参考主文件中loss_fn返回accuracy。
