@@ -24,10 +24,10 @@ def get_dataset_iterator(dataset_name, train_image_size, preprocessing_fn=None, 
   with tf.device("/cpu:0"):
     if not dataset_name:
       raise ValueError('expect dataset_name not None.')
-    if dataset_name not in datasets_map:
-      raise ValueError('Name of network unknown %s' % dataset_name)
     if dataset_name == 'mock':
       return dataset_utils._create_mock_iterator(train_image_size)
+    if dataset_name not in datasets_map:
+      raise ValueError('Name of network unknown %s' % dataset_name)
 
     def parse_fn(example):
       with tf.device("/cpu:0"):

@@ -20,12 +20,14 @@ from utils import misc_utils as utils
 
 
 _DATASET_TRAIN_FILES = {
+  'mock': '',
   'cifar10': 'cifar10_train.tfrecord',
   'mnist': 'mnist_train.tfrecord',
   'flowers': ','.join(['flowers_train_%s-of-00005.tfrecord' % (str(i).rjust(5, '0')) for i in xrange(5)]),
 }
 
 _DATASET_EVAL_FILES = {
+  'mock': '',
   'cifar10': 'cifar10_test.tfrecord',
   'mnist': 'mnist_test.tfrecord',
   'flowers': ','.join(['flowers_validation_%s-of-00005.tfrecord' % (str(i).rjust(5, '0')) for i in xrange(5)]),
