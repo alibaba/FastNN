@@ -2,7 +2,7 @@
 ## 1. Introduction
 FastNN (Fast Neural Networks) is a package of models that aims to show how to implement distributed model in TensorFlow based on [PAISoar](https://yq.aliyun.com/articles/705132). FastNN could help researchers effectively apply distributed neural networks. For now, the initial version of FastNN  provides several classic models on Computer Vision (CV). More state-of-art models would be also integrated into the package in the near future.
 
-If you have interest to try running FastNN models in distributed environment on Alibaba PAI (Platform of Artificial Intelligence), please turn to [PAI Homepage](https://data.aliyun.com/product/learn?spm=5176.12825654.eofdhaal5.143.2cc52c4af9oxZf), then submit machine-learning jobs on PAI-Studio or PAI-DSW notebook. Relative detailed instructions are introduced in [TensorFlow manual](https://help.aliyun.com/document_detail/49571.html?spm=a2c4g.11186623.6.579.10501312JxztvO), you can also quickly jump to chapter "Quick Start".
+If you have interest to try running FastNN models in distributed environment on Alibaba PAI (Platform of Artificial Intelligence), please turn to [PAI Homepage](https://data.aliyun.com/product/learn?spm=5176.12825654.eofdhaal5.143.2cc52c4af9oxZf), then submit machine-learning jobs on PAI-Studio or PAI-DSW notebook. Relative detailed instructions are introduced in [TensorFlow manual](https://help.aliyun.com/document_detail/49571.html?spm=a2c4g.11186623.6.579.10501312JxztvO) and [FastNN-on-PAI-Studio manual](https://help.aliyun.com/document_detail/139435.html), you can also quickly jump to chapter "[Quick Start](https://github.com/alibaba/FastNN/blob/master/README_en.md#2-quick-start)".
 
 FastNN Features：
 * Models

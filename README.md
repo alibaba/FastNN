@@ -1,6 +1,6 @@
 # FastNN模型库([English version](https://github.com/alibaba/FastNN/blob/master/README_en.md))
 ## 1. 简介
-FastNN（Fast Neural Networks）是一个基于[PAISoar](https://yq.aliyun.com/articles/705132)实现分布式训练的基础算法库，当前FastNN只支持计算机视觉的部分经典算法，后续会逐步开放更多的先进模型。如需在机器学习平台PAI（Platform of Artificial Intelligence）试用FastNN分布式训练服务，可访问[PAI平台官方主页](https://data.aliyun.com/product/learn?spm=5176.12825654.eofdhaal5.143.2cc52c4af9oxZf)开通，即可在PAI Studio或DSW-notebook上提交分布式机器学习任务，具体操作流程可参考[TensorFlow使用手册](https://help.aliyun.com/document_detail/49571.html?spm=a2c4g.11186623.6.579.10501312JxztvO)及“快速试用”。
+FastNN（Fast Neural Networks）是一个基于[PAISoar](https://yq.aliyun.com/articles/705132)实现分布式训练的基础算法库，当前FastNN只支持计算机视觉的部分经典算法，后续会逐步开放更多的先进模型。如需在机器学习平台PAI（Platform of Artificial Intelligence）试用FastNN分布式训练服务，可访问[PAI平台官方主页](https://data.aliyun.com/product/learn?spm=5176.12825654.eofdhaal5.143.2cc52c4af9oxZf)开通，即可在PAI Studio或DSW-notebook上提交分布式机器学习任务，具体操作流程可参考[TensorFlow组件使用手册](https://help.aliyun.com/document_detail/49571.html?spm=a2c4g.11186623.6.579.10501312JxztvO)、[FastNN-on-PAI-Studio使用手册](https://help.aliyun.com/document_detail/139435.html)及“[快速试用](https://github.com/alibaba/FastNN#2-%E5%BF%AB%E9%80%9F%E8%AF%95%E7%94%A8)”。
 
 FastNN功能简介如下：
 * 模型支持 
