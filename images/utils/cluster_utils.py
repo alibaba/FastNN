@@ -30,7 +30,7 @@ class BaseClusterManager(object):
   """The manager for the cluster of servers running the fast-nn."""
 
   def __init__(self):
-    assert FLAGS.job_name in ['worker'], 'job_name must be worker'
+    assert FLAGS.job_name in ['worker', 'localhost'], 'job_name must be worker or localhost, but got {}'.format(FLAGS.job_name)
     if FLAGS.job_name and FLAGS.worker_hosts:
       cluster_dict = {'worker': FLAGS.worker_hosts.split(',')}
     else:

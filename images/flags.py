@@ -10,7 +10,7 @@ tf.app.flags.DEFINE_string('worker_hosts', None, 'worker_hosts')
 tf.app.flags.DEFINE_string('ps_hosts', None, '')
 tf.app.flags.DEFINE_integer('worker_count', None, '')
 tf.app.flags.DEFINE_integer('ps_count', None, '')
-tf.app.flags.DEFINE_string('job_name', None, 'job_name')
+tf.app.flags.DEFINE_string('job_name', 'worker', 'job_name')
 
 
 # Model base parameters
