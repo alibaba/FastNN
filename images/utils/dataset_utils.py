@@ -12,8 +12,9 @@ from tensorflow.contrib.data.python.ops import threadpool
 
 def _create_mock_iterator(train_image_size):
   with tf.device('/cpu:0'):
+    dtype = tf.float16 if FLAGS.use_fp16 else tf.float32
     dataset = tf.data.Dataset.from_tensor_slices((
-      tf.ones(shape=[FLAGS.batch_size * 10 * 8, train_image_size, train_image_size, 3], dtype=tf.float16),
+      tf.ones(shape=[FLAGS.batch_size * 10 * 8, train_image_size, train_image_size, 3], dtype=dtype),
       tf.ones(shape=[FLAGS.batch_size * 10 * 8, ], dtype=tf.int64)))
     dataset = dataset.repeat()
     dataset = dataset.batch(FLAGS.batch_size).prefetch(buffer_size=FLAGS.batch_size * 2)
