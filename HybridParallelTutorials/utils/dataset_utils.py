@@ -13,7 +13,7 @@ from tensorflow import logging
 from tensorflow.contrib.data.python.ops import threadpool
 from tensorflow.python.framework.versions import __version__
 
-from shared_params import SHARED_FLAGS
+FLAGS = tf.app.flags.FLAGS
 
 
 def fetch_files(dataset_dir, file_pattern=None):
@@ -43,7 +43,7 @@ def get_tfrecord_files(dataset_dir, train_or_eval_files=None, file_pattern="*"):
       ValueError: If the dataset is unknown.
   """
   with tf.device("/cpu:0"):
-    if SHARED_FLAGS.dataset_name == 'mock':
+    if FLAGS.dataset_name == 'mock':
       return []
     all_tfrecord_files = []
     if dataset_dir is None:
@@ -73,20 +73,20 @@ def _create_dataset_iterator(data_sources, batch_size, parse_fn, reader=None, is
       cycle_length=1,
       buffer_output_elements=batch_size * 8,
       prefetch_input_elements=batch_size * 8))
-    if SHARED_FLAGS.datasets_use_caching:
+    if FLAGS.datasets_use_caching:
       dataset = dataset.cache()
     if is_training:
       dataset = dataset.apply(experimental_data_namespace.shuffle_and_repeat(
-        buffer_size=SHARED_FLAGS.shuffle_buffer_size, count=SHARED_FLAGS.num_epochs))
+        buffer_size=FLAGS.shuffle_buffer_size, count=FLAGS.num_epochs))
     dataset = dataset.apply(experimental_data_namespace.map_and_batch(
-      map_func=parse_fn, batch_size=batch_size, num_parallel_batches=SHARED_FLAGS.num_parallel_batches))
+      map_func=parse_fn, batch_size=batch_size, num_parallel_batches=FLAGS.num_parallel_batches))
 
-    dataset = dataset.prefetch(buffer_size=SHARED_FLAGS.prefetch_buffer_size)
+    dataset = dataset.prefetch(buffer_size=FLAGS.prefetch_buffer_size)
 
     dataset = threadpool.override_threadpool(
       dataset,
       threadpool.PrivateThreadPool(
-        SHARED_FLAGS.num_preprocessing_threads, display_name="input_pipeline_thread_pool"))
+        FLAGS.num_preprocessing_threads, display_name="input_pipeline_thread_pool"))
 
     if Version(__version__) >= Version("1.12.0") and \
         Version(__version__) < Version("1.14.0"):

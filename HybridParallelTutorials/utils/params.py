@@ -155,6 +155,3 @@ tf.app.flags.DEFINE_integer('cut_layer2', 8, '')
 tf.app.flags.DEFINE_integer('num_micro_batch', 3, '')
 tf.app.flags.DEFINE_integer('average', 1, '')
 tf.app.flags.DEFINE_bool('show_memory', False, '')
-
-
-SHARED_FLAGS = tf.app.flags.FLAGS

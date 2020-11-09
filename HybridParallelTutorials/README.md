@@ -11,8 +11,8 @@ Whale提供统一、高效、简洁、易用的分布式训练框架，支持多
 Hybrid Parallel Tutorials给出了多种分布式并行示例，包括以下目录：
 
 - toy_examples：数据并行；
-- bert：模型并行 + 流水并行；
-- algo_with_split：算子拆分.
+- dp_pipeline：数据并行 + 模型并行 + 流水并行；
+- dp_split：数据并行 + 算子拆分.
 
 
 我们在Bert large等模型上进行了大规模的性能测试，在数据并行场景，Whale性能全面超过horovod，流水并行、算子拆分上性能又比数据并行有大幅提升。
@@ -35,7 +35,7 @@ Hybrid Parallel Tutorials给出了多种分布式并行示例，包括以下目�
 特别地，当task_type=finetune时，需额外指定model_dir、ckpt_file_name参数，分别指明模型checkpoint路径及checkpoint文件名。
 
 ### 3. 用户参数指南
-WhaleModelZoo库综合各个模型及Whale框架的需求，统一将可能用到的超参定义在shared_params.py文件（支持用户自定义新超参，可参考模型目录下的excluded_params.py文件）中，参数可分为以下六大类：
+WhaleModelZoo库综合各个模型及Whale框架的需求，统一将可能用到的超参定义在utils/params.py文件（支持用户自定义新超参，可参考模型目录下的excluded_params.py文件）中，参数可分为以下六大类：
 - whale超參：确定whale cluster切分方式;
 - 数据集参数：确定训练集的基本属性，如训练集存储路径dataset_dir；
 - 数据预处理参数：数据预处理函数及dataset pipeline相关参数；

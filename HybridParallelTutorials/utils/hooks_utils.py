@@ -6,7 +6,7 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-from shared_params import SHARED_FLAGS
+FLAGS = tf.app.flags.FLAGS
 
 
 class LoggingTensorHook(tf.train.SessionRunHook):
@@ -57,10 +57,10 @@ def get_train_hooks(params, **kwargs):
     Raises:
       ValueError: if an unrecognized name is passed.
     """
-  if not SHARED_FLAGS.hooks:
+  if not FLAGS.hooks:
     return []
 
-  name_list = SHARED_FLAGS.hooks.split(',')
+  name_list = FLAGS.hooks.split(',')
   train_hooks = []
   for name in name_list:
     hook_name = HOOKS.get(name.strip().lower())
@@ -86,11 +86,11 @@ def get_logging_tensor_hook(params, **kwargs):
       Returns a LoggingTensorHook with a standard set of tensors that will be
       printed to stdout or Null.
   """
-  if SHARED_FLAGS.log_loss_every_n_iters > 0:
+  if FLAGS.log_loss_every_n_iters > 0:
     return LoggingTensorHook(
       tensors=params['tensors_to_log'],
       samples_per_step=params['samples_per_step'],
-      every_n_iters=SHARED_FLAGS.log_loss_every_n_iters)
+      every_n_iters=FLAGS.log_loss_every_n_iters)
   else:
     pass
 
@@ -106,11 +106,11 @@ def get_profiler_hook(params, **kwargs):
       Returns a ProfilerHook that writes out timelines that can be loaded into
       profiling tools like chrome://tracing or Null.
   """
-  if SHARED_FLAGS.profile_every_n_iters > 0 and SHARED_FLAGS.task_index == SHARED_FLAGS.profile_at_task:
+  if FLAGS.profile_every_n_iters > 0 and FLAGS.task_index == FLAGS.profile_at_task:
     return tf.train.ProfilerHook(
-      show_memory=SHARED_FLAGS.show_memory,
-      save_steps=SHARED_FLAGS.profile_every_n_iters,
-      output_dir=SHARED_FLAGS.output_dir)
+      show_memory=FLAGS.show_memory,
+      save_steps=FLAGS.profile_every_n_iters,
+      output_dir=FLAGS.output_dir)
   else:
     pass
 
@@ -125,7 +125,7 @@ def get_stop_at_step_hook(params, **kwargs):
   Returns:
       Returns a StopAtStepHook.
   """
-  return tf.train.StopAtStepHook(last_step=SHARED_FLAGS.stop_at_step)
+  return tf.train.StopAtStepHook(last_step=FLAGS.stop_at_step)
 
 
 def get_checkpoint_saver_hook(params, **kwargs):
@@ -138,18 +138,18 @@ def get_checkpoint_saver_hook(params, **kwargs):
   Returns:
       Returns a CheckpointSaverHook.
   """
-  if SHARED_FLAGS.task_index == 0 and SHARED_FLAGS.checkpointDir is not None \
-      and SHARED_FLAGS.save_checkpoints_steps > 0:
+  if FLAGS.task_index == 0 and FLAGS.checkpointDir is not None \
+      and FLAGS.save_checkpoints_steps > 0:
     import os
     import time
     local_time_ticket = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime(time.time()))
-    model_output_path = os.path.join(SHARED_FLAGS.checkpointDir, local_time_ticket)
-    model_saver = tf.train.Saver(max_to_keep=SHARED_FLAGS.max_save) if SHARED_FLAGS.max_save is not None else None
+    model_output_path = os.path.join(FLAGS.checkpointDir, local_time_ticket)
+    model_saver = tf.train.Saver(max_to_keep=FLAGS.max_save) if FLAGS.max_save is not None else None
     if not os.path.exists(model_output_path):
       tf.logging.info('Creating output path:%s' % (model_output_path))
       os.makedirs(model_output_path)
     return tf.train.CheckpointSaverHook(model_output_path,
-                                        save_steps=SHARED_FLAGS.save_checkpoints_steps,
+                                        save_steps=FLAGS.save_checkpoints_steps,
                                         saver=model_saver)
   else:
     pass

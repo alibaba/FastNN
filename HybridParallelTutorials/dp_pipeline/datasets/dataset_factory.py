@@ -9,7 +9,7 @@ from __future__ import print_function
 import tensorflow as tf
 
 from bert.datasets import squad
-from shared_utils import dataset_utils
+from utils import dataset_utils
 
 datasets_map = {
     'squad': squad,

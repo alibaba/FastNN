@@ -25,7 +25,7 @@ import six
 
 import tensorflow as tf
 
-from shared_params import SHARED_FLAGS
+FLAGS = tf.app.flags.FLAGS
 
 
 class BertConfig(object):
@@ -196,7 +196,7 @@ class BertModel(object):
             dropout_prob=config.hidden_dropout_prob)
 
         input_tensor = self.embedding_output
-        if SHARED_FLAGS.use_fp16:
+        if FLAGS.use_fp16:
           input_tensor = tf.cast(input_tensor, tf.float16)
 
       with tf.variable_scope("encoder"):
@@ -222,7 +222,7 @@ class BertModel(object):
             do_return_all_layers=True)
 
       self.sequence_output = self.all_encoder_layers[-1]
-      if SHARED_FLAGS.use_fp16:
+      if FLAGS.use_fp16:
         self.sequence_output = tf.cast(self.sequence_output, tf.float32)
       # The "pooler" converts the encoded sequence tensor of shape
       # [batch_size, seq_length, hidden_size] to a tensor of shape
@@ -593,7 +593,7 @@ def create_attention_mask_from_input_mask(from_tensor, to_mask):
   # Here we broadcast along two dimensions to create the mask.
   mask = broadcast_ones * to_mask
 
-  if SHARED_FLAGS.use_fp16:
+  if FLAGS.use_fp16:
     mask = tf.cast(mask, tf.float16)
 
   return mask
@@ -782,7 +782,7 @@ def attention_layer(from_tensor,
   # `context_layer` = [B, N, F, H]
   context_layer = tf.matmul(attention_probs, tf.cast(value_layer, tf.float32))
 
-  if SHARED_FLAGS.use_fp16:
+  if FLAGS.use_fp16:
     context_layer = tf.cast(context_layer, tf.float16)
 
   # `context_layer` = [B, F, N, H]

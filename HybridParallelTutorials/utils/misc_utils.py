@@ -13,7 +13,7 @@ from six.moves import reduce
 import tensorflow as tf
 from tensorflow import logging
 
-from shared_params import SHARED_FLAGS
+FLAGS = tf.app.flags.FLAGS
 
 
 def print_out(s, f=None, new_line=True):
@@ -93,9 +93,9 @@ def load_checkpoint():
                     "The model configuration must define the same model as the one used for "
                     "the initial training. However, you can change non structural values like "
                     "dropout.")
-    assert SHARED_FLAGS.model_dir is not None
-    assert SHARED_FLAGS.ckpt_file_name is not None
-    init_checkpoint = os.path.join(SHARED_FLAGS.model_dir, SHARED_FLAGS.ckpt_file_name)
+    assert FLAGS.model_dir is not None
+    assert FLAGS.ckpt_file_name is not None
+    init_checkpoint = os.path.join(FLAGS.model_dir, FLAGS.ckpt_file_name)
     tf.logging.info('start loading checkpoint with path: ', init_checkpoint)
     (assignment_map, initialized_variable_names) = \
         get_assigment_map_from_checkpoint(tvars, init_checkpoint)
@@ -134,9 +134,9 @@ def print_model_statistics():
 
 
 def log_trainable_or_optimizer_vars_info(optimizer=None):
-  if SHARED_FLAGS.log_trainable_vars_statistics:
+  if FLAGS.log_trainable_vars_statistics:
     print_model_statistics()
-  if SHARED_FLAGS.log_optimizer_vars_statistics:
+  if FLAGS.log_optimizer_vars_statistics:
     optimizer_statistics(optimizer)
 
 

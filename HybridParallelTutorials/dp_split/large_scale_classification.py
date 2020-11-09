@@ -8,19 +8,17 @@ See the README for more information.
 from __future__ import division
 from __future__ import print_function
 
-import numpy as np
 import time
 import tensorflow as tf
 import whale as wh
 
 import resnet_model
-from shared_params import SHARED_FLAGS
 
 
 tf.app.flags.DEFINE_integer("class_num", 10000, "")
 FLAGS = tf.app.flags.FLAGS
 
-batch_size = SHARED_FLAGS.batch_size
+batch_size = FLAGS.batch_size
 class_num = FLAGS.class_num
 
 

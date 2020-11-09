@@ -7,22 +7,22 @@ from __future__ import print_function
 import re
 import tensorflow as tf
 
-from shared_params import SHARED_FLAGS
+FLAGS = tf.app.flags.FLAGS
 
 
 def _get_learning_rate_warmup(global_step):
   """Get learning rate warmup."""
-  warmup_steps = SHARED_FLAGS.warmup_steps
-  warmup_scheme = SHARED_FLAGS.warmup_scheme
+  warmup_steps = FLAGS.warmup_steps
+  warmup_scheme = FLAGS.warmup_scheme
   tf.logging.info("  learning_rate=%g, warmup_steps=%d, warmup_scheme=%s" %
-                  (SHARED_FLAGS.learning_rate, warmup_steps, warmup_scheme))
+                  (FLAGS.learning_rate, warmup_steps, warmup_scheme))
 
   # Apply inverse decay if global steps less than warmup steps.
   # Inspired by https://arxiv.org/pdf/1706.03762.pdf (Section 5.3)
   # When step < warmup_steps,
   #   learing_rate *= warmup_factor ** (warmup_steps - step)
   if warmup_scheme != "t2t":
-    return SHARED_FLAGS.learning_rate
+    return FLAGS.learning_rate
   else:
     # 0.01^(1/warmup_steps): we start with a lr, 100 times smaller
     warmup_factor = tf.exp(tf.log(0.01) / warmup_steps)
@@ -30,31 +30,31 @@ def _get_learning_rate_warmup(global_step):
       tf.to_float(warmup_steps - global_step))
     return tf.cond(
       global_step < warmup_steps,
-      lambda: inv_decay * SHARED_FLAGS.learning_rate,
-      lambda: SHARED_FLAGS.learning_rate,
+      lambda: inv_decay * FLAGS.learning_rate,
+      lambda: FLAGS.learning_rate,
       name="learning_rate_warmup_cond")
 
 
 def _get_decay_info():
   """Return decay info based on decay_scheme."""
-  decay_factor = SHARED_FLAGS.learning_rate_decay_factor
-  if SHARED_FLAGS.decay_scheme in ["luong5", "luong10", "luong234"]:
-    if SHARED_FLAGS.decay_scheme == "luong5":
-      start_decay_step = int(SHARED_FLAGS.stop_at_step / 2)
+  decay_factor = FLAGS.learning_rate_decay_factor
+  if FLAGS.decay_scheme in ["luong5", "luong10", "luong234"]:
+    if FLAGS.decay_scheme == "luong5":
+      start_decay_step = int(FLAGS.stop_at_step / 2)
       decay_times = 5
-    elif SHARED_FLAGS.decay_scheme == "luong10":
-      start_decay_step = int(SHARED_FLAGS.stop_at_step / 2)
+    elif FLAGS.decay_scheme == "luong10":
+      start_decay_step = int(FLAGS.stop_at_step / 2)
       decay_times = 10
-    elif SHARED_FLAGS.decay_scheme == "luong234":
-      start_decay_step = int(SHARED_FLAGS.stop_at_step * 2 / 3)
+    elif FLAGS.decay_scheme == "luong234":
+      start_decay_step = int(FLAGS.stop_at_step * 2 / 3)
       decay_times = 4
-    remain_steps = SHARED_FLAGS.stop_at_step - start_decay_step
+    remain_steps = FLAGS.stop_at_step - start_decay_step
     decay_steps = int(remain_steps / decay_times)
-  elif not SHARED_FLAGS.decay_scheme:  # no decay
-    start_decay_step = SHARED_FLAGS.stop_at_step
+  elif not FLAGS.decay_scheme:  # no decay
+    start_decay_step = FLAGS.stop_at_step
     decay_steps = 0
-  elif SHARED_FLAGS.decay_scheme:
-    raise ValueError("Unknown decay scheme %s" % SHARED_FLAGS.decay_scheme)
+  elif FLAGS.decay_scheme:
+    raise ValueError("Unknown decay scheme %s" % FLAGS.decay_scheme)
   return start_decay_step, decay_steps, decay_factor
 
 
@@ -73,13 +73,13 @@ def configure_learning_rate(num_samples_per_epoch, global_step):
   """
   start_decay_step, decay_steps, decay_factor = _get_decay_info()
   tf.logging.info("  decay_scheme=%s, start_decay_step=%d, decay_steps %d, "
-                  "decay_factor %g" % (SHARED_FLAGS.decay_scheme,
+                  "decay_factor %g" % (FLAGS.decay_scheme,
                                        start_decay_step,
                                        decay_steps,
                                        decay_factor))
   learning_rate = _get_learning_rate_warmup(global_step)
 
-  if SHARED_FLAGS.learning_rate_decay_type == 'exponential':
+  if FLAGS.learning_rate_decay_type == 'exponential':
     return tf.cond(
       global_step < start_decay_step,
       lambda: learning_rate,
@@ -88,15 +88,15 @@ def configure_learning_rate(num_samples_per_epoch, global_step):
         (global_step - start_decay_step),
         decay_steps, decay_factor, staircase=True),
       name="exponential_learning_rate_decay_cond")
-  elif SHARED_FLAGS.learning_rate_decay_type == 'fixed':
-    return tf.constant(SHARED_FLAGS.learning_rate, name='fixed_learning_rate')
-  elif SHARED_FLAGS.learning_rate_decay_type == "cosine":
+  elif FLAGS.learning_rate_decay_type == 'fixed':
+    return tf.constant(FLAGS.learning_rate, name='fixed_learning_rate')
+  elif FLAGS.learning_rate_decay_type == "cosine":
     return tf.train.cosine_decay(
         learning_rate,
-        global_step=global_step - SHARED_FLAGS.warmup_steps,
-        decay_steps=SHARED_FLAGS.stop_at_step - SHARED_FLAGS.warmup_steps,
-        alpha=SHARED_FLAGS.min_lr_ratio)
-  elif SHARED_FLAGS.learning_rate_decay_type == 'polynomial':
+        global_step=global_step - FLAGS.warmup_steps,
+        decay_steps=FLAGS.stop_at_step - FLAGS.warmup_steps,
+        alpha=FLAGS.min_lr_ratio)
+  elif FLAGS.learning_rate_decay_type == 'polynomial':
     return tf.cond(
       global_step < start_decay_step,
       lambda: learning_rate,
@@ -104,14 +104,14 @@ def configure_learning_rate(num_samples_per_epoch, global_step):
         learning_rate,
         (global_step - start_decay_step),
         decay_steps,
-        SHARED_FLAGS.end_learning_rate,
+        FLAGS.end_learning_rate,
         power=1.0,
         cycle=False),
       name="polynomial_learning_rate_decay_cond")
 
   else:
     raise ValueError('learning_rate_decay_type [%s] was not recognized' %
-                     SHARED_FLAGS.learning_rate_decay_type)
+                     FLAGS.learning_rate_decay_type)
 
 
 def configure_optimizer(learning_rate):
@@ -126,51 +126,51 @@ def configure_optimizer(learning_rate):
   Raises:
       ValueError: if FLAGS.optimizer is not recognized.
   """
-  if SHARED_FLAGS.optimizer == 'adadelta':
+  if FLAGS.optimizer == 'adadelta':
     optimizer = tf.train.AdadeltaOptimizer(
       learning_rate,
-      rho=SHARED_FLAGS.adadelta_rho,
-      epsilon=SHARED_FLAGS.opt_epsilon)
-  elif SHARED_FLAGS.optimizer == 'adagrad':
+      rho=FLAGS.adadelta_rho,
+      epsilon=FLAGS.opt_epsilon)
+  elif FLAGS.optimizer == 'adagrad':
     optimizer = tf.train.AdagradOptimizer(
       learning_rate,
-      initial_accumulator_value=SHARED_FLAGS.adagrad_initial_accumulator_value)
-  elif SHARED_FLAGS.optimizer == 'adam':
+      initial_accumulator_value=FLAGS.adagrad_initial_accumulator_value)
+  elif FLAGS.optimizer == 'adam':
     optimizer = tf.train.AdamOptimizer(
       learning_rate,
-      beta1=SHARED_FLAGS.adam_beta1,
-      beta2=SHARED_FLAGS.adam_beta2,
-      epsilon=SHARED_FLAGS.opt_epsilon)
-  elif SHARED_FLAGS.optimizer == 'ftrl':
+      beta1=FLAGS.adam_beta1,
+      beta2=FLAGS.adam_beta2,
+      epsilon=FLAGS.opt_epsilon)
+  elif FLAGS.optimizer == 'ftrl':
     optimizer = tf.train.FtrlOptimizer(
       learning_rate,
-      learning_rate_power=SHARED_FLAGS.ftrl_learning_rate_power,
-      initial_accumulator_value=SHARED_FLAGS.ftrl_initial_accumulator_value,
-      l1_regularization_strength=SHARED_FLAGS.ftrl_l1,
-      l2_regularization_strength=SHARED_FLAGS.ftrl_l2)
-  elif SHARED_FLAGS.optimizer == 'momentum':
+      learning_rate_power=FLAGS.ftrl_learning_rate_power,
+      initial_accumulator_value=FLAGS.ftrl_initial_accumulator_value,
+      l1_regularization_strength=FLAGS.ftrl_l1,
+      l2_regularization_strength=FLAGS.ftrl_l2)
+  elif FLAGS.optimizer == 'momentum':
     optimizer = tf.train.MomentumOptimizer(
       learning_rate,
-      momentum=SHARED_FLAGS.momentum,
+      momentum=FLAGS.momentum,
       name='Momentum')
-  elif SHARED_FLAGS.optimizer == 'rmsprop':
+  elif FLAGS.optimizer == 'rmsprop':
     optimizer = tf.train.RMSPropOptimizer(
       learning_rate,
-      decay=SHARED_FLAGS.rmsprop_decay,
-      momentum=SHARED_FLAGS.rmsprop_momentum,
-      epsilon=SHARED_FLAGS.opt_epsilon)
-  elif SHARED_FLAGS.optimizer == 'sgd':
+      decay=FLAGS.rmsprop_decay,
+      momentum=FLAGS.rmsprop_momentum,
+      epsilon=FLAGS.opt_epsilon)
+  elif FLAGS.optimizer == 'sgd':
     optimizer = tf.train.GradientDescentOptimizer(learning_rate)
-  elif SHARED_FLAGS.optimizer == "adamweightdecay":
+  elif FLAGS.optimizer == "adamweightdecay":
     optimizer = AdamWeightDecayOptimizer(
       learning_rate=learning_rate,
       weight_decay_rate=0.01,
-      beta_1=SHARED_FLAGS.adam_beta1,
-      beta_2=SHARED_FLAGS.adam_beta2,
-      epsilon=SHARED_FLAGS.opt_epsilon,
+      beta_1=FLAGS.adam_beta1,
+      beta_2=FLAGS.adam_beta2,
+      epsilon=FLAGS.opt_epsilon,
       exclude_from_weight_decay=["LayerNorm", "layer_norm", "bias"])
   else:
-    raise ValueError('Optimizer [%s] was not recognized' % SHARED_FLAGS.optimizer)
+    raise ValueError('Optimizer [%s] was not recognized' % FLAGS.optimizer)
   return optimizer
 
 

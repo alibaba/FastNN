@@ -15,12 +15,12 @@ os.environ["WHALE_COMMUNICATION_NUM_COMMUNICATORS"]="2"
 import tensorflow as tf
 
 from bert.datasets import dataset_factory
-from bert.exclusive_params import EXCLUSIVE_FLAGS
 from bert.models import modeling
-from shared_params import SHARED_FLAGS
-from shared_utils import dataset_utils, optimizer_utils, hooks_utils, misc_utils as utils
+from utils import dataset_utils, optimizer_utils, hooks_utils, misc_utils
 
 import whale as wh
+
+FLAGS = tf.app.flags.FLAGS
 
 
 def build_output_layer_squad(final_hidden, input_ids, kwargs):
@@ -77,15 +77,15 @@ def build_output_layer_squad(final_hidden, input_ids, kwargs):
 def run_model(cluster, config_proto, is_training=True):
 
   with wh.replica():
-    with wh.pipeline(num_micro_batch=SHARED_FLAGS.num_micro_batch):
+    with wh.pipeline(num_micro_batch=FLAGS.num_micro_batch):
       with wh.stage():
         #############################
         #  Config training files  #
         #############################
         # Fetch all dataset files
-        data_sources = None if SHARED_FLAGS.dataset_name == 'mock' \
-          else dataset_utils.get_tfrecord_files(SHARED_FLAGS.dataset_dir,
-                                                file_pattern=SHARED_FLAGS.file_pattern)
+        data_sources = None if FLAGS.dataset_name == 'mock' \
+          else dataset_utils.get_tfrecord_files(FLAGS.dataset_dir,
+                                                file_pattern=FLAGS.file_pattern)
 
         ########################
         #  Config train tensor #
@@ -93,16 +93,16 @@ def run_model(cluster, config_proto, is_training=True):
         global_step = tf.train.get_or_create_global_step()
 
         # Set dataset iterator
-        dataset_iterator = dataset_factory.get_dataset_iterator(SHARED_FLAGS.dataset_name,
-                                                                SHARED_FLAGS.batch_size,
+        dataset_iterator = dataset_factory.get_dataset_iterator(FLAGS.dataset_name,
+                                                                FLAGS.batch_size,
                                                                 data_sources,
-                                                                SHARED_FLAGS.reader)
+                                                                FLAGS.reader)
 
         # Set learning_rate
-        learning_rate = optimizer_utils.configure_learning_rate(SHARED_FLAGS.num_sample_per_epoch, global_step)
+        learning_rate = optimizer_utils.configure_learning_rate(FLAGS.num_sample_per_epoch, global_step)
 
         # Set optimizer
-        samples_per_step = SHARED_FLAGS.batch_size
+        samples_per_step = FLAGS.batch_size
         optimizer = optimizer_utils.configure_optimizer(learning_rate)
 
         next_batch = dataset_iterator.get_next()
@@ -111,13 +111,13 @@ def run_model(cluster, config_proto, is_training=True):
         kwargs['end_positions'] = next_batch['end_positions']
         kwargs['unique_ids'] = next_batch['unique_ids']
         import os
-        bert_config_file = os.path.join(SHARED_FLAGS.model_dir, EXCLUSIVE_FLAGS.model_config_file_name)
+        bert_config_file = os.path.join(FLAGS.model_dir, FLAGS.model_config_file_name)
         bert_config = modeling.BertConfig.from_json_file(bert_config_file)
-        if EXCLUSIVE_FLAGS.max_seq_length > bert_config.max_position_embeddings:
+        if FLAGS.max_seq_length > bert_config.max_position_embeddings:
           raise ValueError(
             "Cannot use sequence length %d because the BERT model "
             "was only trained up to sequence length %d" %
-            (EXCLUSIVE_FLAGS.max_seq_length, bert_config.max_position_embeddings))
+            (FLAGS.max_seq_length, bert_config.max_position_embeddings))
 
         if not is_training:
           bert_config.hidden_dropout_prob = 0.0
@@ -163,7 +163,7 @@ def run_model(cluster, config_proto, is_training=True):
             dropout_prob=bert_config.hidden_dropout_prob)
 
           input_tensor = embedding_output
-          if SHARED_FLAGS.use_fp16:
+          if FLAGS.use_fp16:
             input_tensor = tf.cast(input_tensor, tf.float16)
 
         with tf.variable_scope("encoder1"):
@@ -176,7 +176,7 @@ def run_model(cluster, config_proto, is_training=True):
             input_tensor=input_tensor,
             attention_mask=attention_mask,
             hidden_size=bert_config.hidden_size,
-            num_hidden_layers=SHARED_FLAGS.cut_layer1,
+            num_hidden_layers=FLAGS.cut_layer1,
             num_attention_heads=bert_config.num_attention_heads,
             intermediate_size=bert_config.intermediate_size,
             intermediate_act_fn=modeling.get_activation(bert_config.hidden_act),
@@ -191,7 +191,7 @@ def run_model(cluster, config_proto, is_training=True):
             input_tensor=all_encoder_layers[-1],
             attention_mask=attention_mask,
             hidden_size=bert_config.hidden_size,
-            num_hidden_layers=SHARED_FLAGS.cut_layer2,
+            num_hidden_layers=FLAGS.cut_layer2,
             num_attention_heads=bert_config.num_attention_heads,
             intermediate_size=bert_config.intermediate_size,
             intermediate_act_fn=modeling.get_activation(bert_config.hidden_act),
@@ -199,7 +199,7 @@ def run_model(cluster, config_proto, is_training=True):
             attention_probs_dropout_prob=bert_config.attention_probs_dropout_prob,
             initializer_range=bert_config.initializer_range,
             do_return_all_layers=True,
-            start_layer_idx=SHARED_FLAGS.cut_layer1)
+            start_layer_idx=FLAGS.cut_layer1)
 
       with wh.stage():
         with tf.variable_scope("encoder"):
@@ -207,7 +207,7 @@ def run_model(cluster, config_proto, is_training=True):
             input_tensor=all_encoder_layers[-1],
             attention_mask=attention_mask,
             hidden_size=bert_config.hidden_size,
-            num_hidden_layers=bert_config.num_hidden_layers - SHARED_FLAGS.cut_layer1 - SHARED_FLAGS.cut_layer2,
+            num_hidden_layers=bert_config.num_hidden_layers - FLAGS.cut_layer1 - FLAGS.cut_layer2,
             num_attention_heads=bert_config.num_attention_heads,
             intermediate_size=bert_config.intermediate_size,
             intermediate_act_fn=modeling.get_activation(bert_config.hidden_act),
@@ -215,11 +215,11 @@ def run_model(cluster, config_proto, is_training=True):
             attention_probs_dropout_prob=bert_config.attention_probs_dropout_prob,
             initializer_range=bert_config.initializer_range,
             do_return_all_layers=True,
-            start_layer_idx=SHARED_FLAGS.cut_layer1 + SHARED_FLAGS.cut_layer2)
+            start_layer_idx=FLAGS.cut_layer1 + FLAGS.cut_layer2)
 
         with tf.variable_scope("cal_loss"):
           sequence_output = all_encoder_layers[-1]
-          if SHARED_FLAGS.use_fp16:
+          if FLAGS.use_fp16:
             sequence_output = tf.cast(sequence_output, tf.float32)
           # The "pooler" converts the encoded sequence tensor of shape
           # [batch_size, seq_length, hidden_size] to a tensor of shape
@@ -238,7 +238,7 @@ def run_model(cluster, config_proto, is_training=True):
 
           input_ids = next_batch['input_ids']
 
-          if EXCLUSIVE_FLAGS.model_type == 'mrc':
+          if FLAGS.model_type == 'mrc':
             loss = build_output_layer_squad(sequence_output, input_ids, kwargs)
           else:
             raise ValueError("model_type should be one of ['classification', "
@@ -256,7 +256,7 @@ def run_model(cluster, config_proto, is_training=True):
   # Config training hooks #
   #########################
   params = dict()
-  if SHARED_FLAGS.log_loss_every_n_iters > 0:
+  if FLAGS.log_loss_every_n_iters > 0:
     tensors_to_log = {'loss': loss if isinstance(loss, tf.Tensor) else loss.replicas[0],
                       'lrate': learning_rate}
     params['tensors_to_log'] = tensors_to_log
@@ -267,20 +267,20 @@ def run_model(cluster, config_proto, is_training=True):
   #  Log trainable or optimizer variables info, #
   #  including name and size.                   #
   ###############################################
-  utils.log_trainable_or_optimizer_vars_info(optimizer)
+  misc_utils.log_trainable_or_optimizer_vars_info(optimizer)
 
   ################
   # Restore ckpt #
   ################
-  if SHARED_FLAGS.model_dir and SHARED_FLAGS.task_type == 'finetune':
-    utils.load_checkpoint()
+  if FLAGS.model_dir and FLAGS.task_type == 'finetune':
+    misc_utils.load_checkpoint()
 
   ###########################
   # Kicks off the training. #
   ###########################
   with tf.train.MonitoredTrainingSession(
       config=config_proto,
-      checkpoint_dir=SHARED_FLAGS.checkpointDir,
+      checkpoint_dir=FLAGS.checkpointDir,
       hooks=hooks) as sess:
     #sess.run([tf.local_variables_initializer()])
     try:

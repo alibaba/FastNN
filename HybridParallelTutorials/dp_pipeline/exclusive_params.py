@@ -14,7 +14,3 @@ tf.app.flags.DEFINE_integer("max_seq_length", 384,
 tf.app.flags.DEFINE_string("model_config_file_name", None,
                            "The config json file corresponding to the pre-trained model. "
                            "This specifies the model architecture.")
-
-
-EXCLUSIVE_FLAGS = tf.app.flags.FLAGS
-
