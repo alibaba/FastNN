@@ -6,7 +6,7 @@ if [ -f "data/train.tf_record" ]; then
   cp data/train.tf_record $output_dir/
 fi
 
-python run_squad_pipe.py \
+python run_squad_auto_pipe.py \
 --vocab_file=$BERT_BASE_DIR/vocab.txt \
 --bert_config_file=$BERT_BASE_DIR/bert_config.json \
 --init_checkpoint=$BERT_BASE_DIR/bert_model.ckpt \
