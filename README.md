@@ -1,6 +1,6 @@
 # EPL Examples
 
-This repo contains distributed training examples that use EPL.
+This repo contains distributed training examples that use [Easy Parallel Library](https://github.com/alibaba/EasyParallelLibrary) (EPL).
 
 
 ## Install dependent libraries
