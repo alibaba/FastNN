@@ -30,6 +30,10 @@ import tokenization
 import six
 import tensorflow as tf
 
+import epl
+from epl.profiler.memory_profiler_hook import MemoryProfilerHook
+
+
 flags = tf.flags
 
 FLAGS = flags.FLAGS
@@ -155,6 +159,8 @@ flags.DEFINE_float(
     "If null_score - best_non_null is greater than the threshold predict null.")
 
 flags.DEFINE_integer("num_pipe_stages", 1, "number of pipeline stages")
+flags.DEFINE_integer("num_micro_batch", 1, "number of pipeline micro batches")
+flags.DEFINE_bool("profiler", False, "enable memory and timeline profiler")
 
 # EPL runtime optimization
 flags.DEFINE_bool("gc", False, "enable gradient checkpoint")
@@ -667,6 +673,7 @@ def model_fn_builder(bert_config, init_checkpoint, learning_rate,
       end_loss = compute_loss(end_logits, end_positions)
 
       total_loss = (start_loss + end_loss) / 2.0
+      logging_hook = tf.train.LoggingTensorHook({"loss" : total_loss}, every_n_iter=1)
 
       train_op = optimization.create_optimizer(
           total_loss, learning_rate, num_train_steps, num_warmup_steps, use_tpu)
@@ -675,7 +682,8 @@ def model_fn_builder(bert_config, init_checkpoint, learning_rate,
           mode=mode,
           loss=total_loss,
           train_op=train_op,
-          scaffold_fn=scaffold_fn)
+          scaffold_fn=scaffold_fn,
+          training_hooks=[logging_hook])
     elif mode == tf.estimator.ModeKeys.PREDICT:
       predictions = {
           "unique_ids": unique_ids,
@@ -1160,6 +1168,18 @@ def main(_):
           num_shards=FLAGS.num_tpu_cores,
           per_host_input_for_training=is_per_host))
 
+  epl_env = epl.Env.get()
+  total_device = len(epl_env.cluster.available_devices)
+  num_replica = total_device // FLAGS.num_pipe_stages
+  micro_batch = FLAGS.train_batch_size // epl_env.config.pipeline.num_micro_batch
+  micro_batch = micro_batch // num_replica
+  
+  tf.logging.info("total_batch: {}, num_micro_batch: {}, num_replica: {}, micro_batch: {}".format(
+          FLAGS.train_batch_size,
+          epl_env.config.pipeline.num_micro_batch,
+          num_replica,
+          micro_batch))
+
   train_examples = None
   num_train_steps = None
   num_warmup_steps = None
@@ -1190,7 +1210,7 @@ def main(_):
       use_tpu=FLAGS.use_tpu,
       model_fn=model_fn,
       config=run_config,
-      train_batch_size=FLAGS.train_batch_size,
+      train_batch_size=micro_batch,
       predict_batch_size=FLAGS.predict_batch_size)
 
   if FLAGS.do_train:
@@ -1223,7 +1243,16 @@ def main(_):
         seq_length=FLAGS.max_seq_length,
         is_training=True,
         drop_remainder=True)
-    estimator.train(input_fn=train_input_fn, max_steps=num_train_steps)
+    if FLAGS.profiler:
+      timeline = tf.train.ProfilerHook(save_steps=20, output_dir=FLAGS.output_dir + "/timeline")
+      profile_hook = MemoryProfilerHook(save_steps=1,
+                                        max_steps=5,
+                                        output_dir=FLAGS.output_dir,
+                                        visualize=True)
+      hooks = [profile_hook, timeline]
+    else:
+      hooks = None
+    estimator.train(input_fn=train_input_fn, max_steps=num_train_steps, hooks=hooks)
 
   if FLAGS.do_predict:
     eval_examples = read_squad_examples(

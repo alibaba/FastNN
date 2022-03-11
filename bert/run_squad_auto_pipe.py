@@ -27,5 +27,7 @@ if __name__ == "__main__":
     config_json["amp.loss_scale"] = 128
     config_json["amp.debug_log"] = True
   config_json["pipeline.num_micro_batch"] = FLAGS.num_micro_batch
+  config_json["auto.auto_parallel"] = True
+  config_json["pipeline.num_stages"] = FLAGS.num_pipe_stages
   epl.init(epl.Config(config_json))
   tf.app.run()

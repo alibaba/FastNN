@@ -830,7 +830,7 @@ def transformer_model(input_tensor,
 
   all_layer_outputs = []
   for layer_idx in range(num_hidden_layers):
-    if FLAGS.num_pipe_stages > 1 and layer_idx % num_layer_per_stage == 0:
+    if FLAGS.num_pipe_stages > 1 and layer_idx % num_layer_per_stage == 0 and not epl.Env.get().config.auto.auto_parallel:
       epl.set_default_strategy(epl.replicate(1))
     with tf.variable_scope("layer_%d" % layer_idx):
       layer_input = prev_output
